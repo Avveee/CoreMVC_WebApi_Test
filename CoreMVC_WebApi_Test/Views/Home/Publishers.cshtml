@@ -1,0 +1,90 @@
+﻿@{
+    ViewData["Title"] = "Publishers";
+}
+
+<h2>Publishers</h2>
+<a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="CreatePublisher">Create</a>
+<table id="publishersTable" class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Name</th>
+            <th>City</th>
+            <th>State</th>
+            <th>Country</th>
+        </tr>
+    <thead>
+    <tbody></tbody>
+</table>
+
+
+
+<script>
+    $(document).ready(() => {
+
+        // подача Ajax-запроса на сервер при помощи JQuery
+        $.ajax({
+            url: '/api/Publishers',
+            method: "GET",
+            dataType: 'JSON',
+            contentType: 'application/json',
+            cache: false,
+            processData: false,
+            beforeSend: function (xheader) {
+                var token = sessionStorage.getItem(tokenKey);
+                xheader.setRequestHeader("Authorization", "Bearer " + token);
+            },
+            success: function (data) {
+                console.log(data);
+
+                // получить ссылку на таблицу с результатами
+                var table = $('#publishersTable');
+
+                // удалить все старые строки
+                table.find("tbody tr").remove();
+
+                // перебрать коллекцию в Json и создать новые строки таблицы на их основе
+                data.forEach(function (publisher) {
+                    table.append("<tr><td>" + publisher.pubId +
+                        "</td><td>" + publisher.pubName +
+                        "</td><td>" + publisher.city +
+                        "</td><td>" + publisher.state +
+                        "</td><td>" + publisher.country +
+                        "</td><td><button class='btn-link js-edit' data-au-id=" + publisher.pubId + ">Edit</button>&nbsp;<button class='btn-link js-delete' data-au-id=" + publisher.pubId + ">Delete</button></td></tr>");
+                });
+            }
+        })
+    });
+
+    $("#publishersTable").on("click", ".js-edit", function () {
+        var button = $(this);
+        //alert(button.attr("data-au-id"));
+        window.location.href = '/Home/EditPublisher/' + button.attr("data-au-id");
+    });
+
+    $("#publishersTable").on("click", ".js-delete", function () {
+        var button = $(this);
+
+        //if (confirm("Are you sure you want to delete this author?"))
+        {
+            $.ajax({
+                url: "/api/Publishers/" + button.attr("data-au-id"),
+                method: "DELETE",
+                beforeSend: function (xheader) {
+                var token = sessionStorage.getItem(tokenKey);
+                xheader.setRequestHeader("Authorization", "Bearer " + token);
+            },
+                success: function () {
+
+                    // получить по кнопке удаляемой строки саму удаляемую строку
+                    var row = button[0].parentNode.parentNode;
+
+                    // удалить строку из таблицы
+                    row.parentNode.removeChild(row);
+                }
+            }).fail(function () {
+                alert('fail');
+            })
+        }
+    });
+</script>

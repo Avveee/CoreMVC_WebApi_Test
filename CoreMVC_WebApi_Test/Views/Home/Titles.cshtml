@@ -1,0 +1,92 @@
+﻿@{
+    ViewData["Title"] = "Titles";
+}
+
+<h2>Titles</h2>
+<a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="CreateTitle">Create</a>
+<table id="titlesTable" class="table table-bordered table-hover">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Publisher</th>
+            <th>Price</th>
+            <th>Publication Date</th>
+        </tr>
+    <thead>
+    <tbody></tbody>
+</table>
+
+
+
+<script>
+    $(document).ready(() => {
+
+        // подача Ajax-запроса на сервер при помощи JQuery
+        $.ajax({
+            url: '/api/Titles',
+            method: "GET",
+            dataType: 'JSON',
+            contentType: 'application/json',
+            cache: false,
+            processData: false,
+            beforeSend: function (xheader) {
+                var token = sessionStorage.getItem(tokenKey);
+                xheader.setRequestHeader("Authorization", "Bearer " + token);
+            },
+            success: function (data) {
+                console.log(data);
+
+                // получить ссылку на таблицу с результатами
+                var table = $('#titlesTable');
+
+                // удалить все старые строки
+                table.find("tbody tr").remove();
+
+                // перебрать коллекцию в Json и создать новые строки таблицы на их основе
+                data.forEach(function (title) {
+                    table.append("<tr><td>" + title.titleId +
+                        "</td><td>" + title.title1 +
+                        "</td><td>" + title.type +
+                        "</td><td>" + title.pubId +
+                        "</td><td>" + title.price +
+                        "</td><td>" + title.pubdate +
+                        "</td><td><button class='btn-link js-edit' data-au-id=" + title.titleId + ">Edit</button>&nbsp;<button class='btn-link js-delete' data-au-id=" + title.titleId + ">Delete</button></td></tr>");
+                });
+            }
+        })
+    });
+
+    $("#titlesTable").on("click", ".js-edit", function () {
+        var button = $(this);
+        //alert(button.attr("data-au-id"));
+        window.location.href = '/Home/EditTitle/' + button.attr("data-au-id");
+    });
+
+    $("#titlesTable").on("click", ".js-delete", function () {
+        var button = $(this);
+
+        //if (confirm("Are you sure you want to delete this author?"))
+        {
+            $.ajax({
+                url: "/api/Titles/" + button.attr("data-au-id"),
+                method: "DELETE",
+                beforeSend: function (xheader) {
+                var token = sessionStorage.getItem(tokenKey);
+                xheader.setRequestHeader("Authorization", "Bearer " + token);
+            },
+                success: function () {
+
+                    // получить по кнопке удаляемой строки саму удаляемую строку
+                    var row = button[0].parentNode.parentNode;
+
+                    // удалить строку из таблицы
+                    row.parentNode.removeChild(row);
+                }
+            }).fail(function () {
+                alert('fail');
+            })
+        }
+    });
+</script>

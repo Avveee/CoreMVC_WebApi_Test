@@ -1,0 +1,113 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using CoreMVC_WebApi_Test.Data
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<div id="loggedIn" style="display: none">
+    <ul class="nav navbar-nav navbar-right">
+        <li><label style="color: lightgray; margin-top: 15px;">Hello, <span id="userName"></span></label></li>
+        <li><button style="margin-top: 12px; margin-left: 10px;" id='logoutButton' class='btn-link'>Log out</button></li>
+    </ul>
+</div>
+
+<div id="loggedOut" style="display: none">
+    <ul class="nav navbar-nav navbar-right">
+        <li style="margin-top: 12px;">
+            <label style="color: lightgray;" for="email">E-mail:&nbsp;&nbsp;</label>
+            <input type="email" id="email" />
+        </li>
+        <li style="margin-top: 12px;">
+            <label style="color: lightgray; margin-left: 10px;" for="password">Password:&nbsp;&nbsp;</label>
+            <input type="password" id="password" />
+        </li>
+        <li><button style="margin-top: 12px; margin-left: 10px;" id='loginButton' class='btn-link'>Log in</button></li>
+    </ul>
+</div>
+
+<script>
+
+    var tokenKey = "sessionToken";
+
+    $(document).ready(function () {
+
+        // попытка залогиниться
+        $('#loginButton').click(function (e) {
+            e.preventDefault();
+
+            // объект для залогинивания по токену
+            var loginData = {
+                grant_type: 'password',
+                Username: $('#email').val(),
+                Password: $('#password').val()
+            };
+
+            $.ajax({
+                url: '/api/Titles/Login',
+                method: "POST",
+                data: JSON.stringify({
+                    grant_type: 'password',
+                    Username: $('#email').val(),
+                    Password: $('#password').val()
+                }),
+                dataType: 'JSON',
+                contentType: 'application/json',
+                success: function (data, textStatus, xhr) {
+                    //console.log(data);
+
+                    // поменять блоки интерфейса
+                    $('#userName').text(data.userName);
+                    $('#loggedIn').css('display', 'block');
+                    $('#loggedOut').css('display', 'none');
+
+                    //alert('Login successful!');
+
+                    // сохранить полученный токен и имя пользователя в sessionStorage
+                    sessionStorage.setItem(tokenKey, data.access_token);
+                    sessionStorage.setItem("userName", data.userName);
+                    console.log(data.access_token);
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    console.log('Login failed!');
+                    console.log(xhr);
+                }
+            });
+        });
+
+        $('#logoutButton').click(function (e) {
+            e.preventDefault();
+
+            // удаление токена и имени пользователя из sessionStorage
+            sessionStorage.removeItem(tokenKey);
+            sessionStorage.removeItem("userName");
+
+            // скрыть и показать блоки
+            $('#loggedIn').css('display', 'none');
+            $('#loggedOut').css('display', 'block');
+        });
+
+        //alert("Token key: " + sessionStorage.getItem(tokenKey));
+
+        // проверить, есть ли сохранённый токен пользователя
+        if (sessionStorage.getItem(tokenKey) == null) {
+
+            // если нет, то скрыть кнопку выхода
+            $('#loggedIn').css('display', 'none');
+
+            // показать блок входа
+            $('#loggedOut').css('display', 'block');
+        }
+        else {
+
+            // если есть, то показать имя пользователя
+            $('#userName').text(sessionStorage.getItem("userName"));
+
+            // показать кнопку выхода
+            $('#loggedIn').css('display', 'block');
+
+            // скрыть блок входа
+            $('#loggedOut').css('display', 'none');
+        }
+
+    });
+</script>

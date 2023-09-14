@@ -1,0 +1,159 @@
+﻿@model CoreMVC_WebApi_Test.Models.Title
+
+@{
+    ViewData["Title"] = "CreateTitle";
+}
+
+<h1>CreateTitle</h1>
+
+<h4>Title</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="CreateTitle" id="validForm">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="TitleId" class="control-label"></label>
+                <input asp-for="TitleId" class="form-control" />
+                <span asp-validation-for="TitleId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Title1" class="control-label"></label>
+                <input asp-for="Title1" class="form-control" />
+                <span asp-validation-for="Title1" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Type" class="control-label"></label>
+                <input asp-for="Type" class="form-control" />
+                <span asp-validation-for="Type" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="PubId" class="control-label"></label>
+                <select asp-for="PubId" class ="form-control" asp-items="ViewBag.PubId"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="Price" class="control-label"></label>
+                <input asp-for="Price" class="form-control" />
+                <span asp-validation-for="Price" class="text-danger"></span>
+            </div>
+           @* <div class="form-group">
+                <label asp-for="Advance" class="control-label"></label>
+                <input asp-for="Advance" class="form-control" />
+                <span asp-validation-for="Advance" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Royalty" class="control-label"></label>
+                <input asp-for="Royalty" class="form-control" />
+                <span asp-validation-for="Royalty" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="YtdSales" class="control-label"></label>
+                <input asp-for="YtdSales" class="form-control" />
+                <span asp-validation-for="YtdSales" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Notes" class="control-label"></label>
+                <input asp-for="Notes" class="form-control" />
+                <span asp-validation-for="Notes" class="text-danger"></span>
+            </div>*@
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+<script>
+
+    $('#validForm').submit(function (e) {
+        e.preventDefault();
+
+        var titleId = $('#TitleId').val();
+        var title1 = $('#Title1').val();
+        var type = $('#Type').val();
+        var pubId = $('#PubId').val();
+        var price = parseFloat($('#Price').val());
+        //var advance = parseFloat($('#Advance').val());
+        //var royalty = parseInt($('#Royalty').val());
+        //var ytdSales = parseInt($('#YtdSales').val());
+        //var notes = $('#Notes').val();
+        var pubDate = new Date().toISOString($('#PubDate').val()).slice(0, 19);
+
+        var titleData = {
+            titleId: titleId,
+            title1: title1,
+            type: type,
+            pubId: pubId,
+            price: price,
+            //advance: advance,
+            //royalty: royalty,
+            //ytdSales: ytdSales,
+            //notes: notes,
+            pubdate: pubDate
+        };
+
+        console.log(titleData);
+
+        $.ajax({
+            url: '/api/Titles/',
+            method: "POST",
+            data: JSON.stringify(titleData),
+            dataType: 'JSON',
+            contentType: 'application/json',
+            cache: false,
+            processData: false,
+            beforeSend: function (xheader) {
+                var token = sessionStorage.getItem(tokenKey);
+                xheader.setRequestHeader("Authorization", "Bearer " + token);
+            },
+            success: function (data) {
+                console.log(data);
+                document.location.href = "/Home/Titles";
+            },
+            error: function (data) {
+                onError(data);
+            }
+        })
+    });
+
+    function onError(data) {
+        console.log(data);
+        //alert(data);
+
+        // скрыть все ошибки, показанные на предыдущем шаге валидации
+        $("input").removeClass('input-validation-error');
+        $("select").removeClass('input-validation-error');
+        $("span[data-valmsg-for]").removeClass('field-validation-error');
+        $("span[data-valmsg-for]").addClass('field-validation-valid');
+        $("span[data-valmsg-for]").text("");
+
+        // если произошла ошибка валидации
+        if (data.status == 400) {
+            console.log(data.responseJSON);
+
+            // перебрать все полученные ошибки валидации
+            //$.each(data.responseJSON.ModelState, function (key, value) {
+            $.each(data.responseJSON.errors, function (key, value) {
+                //key = key.split('.')[1];
+
+                console.log(key);
+                console.log(value);
+
+                // выделить текстовое поле с ошибкой
+                var filter = "input[name='" + key + "']";
+                $(filter).addClass('input-validation-error');
+
+                // показать сообщение об ошибке для каждого текстового поля с ошибкой
+                var validationMessageElement = $('span[data-valmsg-for="' + key + '"]');
+                validationMessageElement.removeClass('field-validation-valid');
+                validationMessageElement.addClass('field-validation-error');
+                validationMessageElement.text(value[0]);
+            });
+        }
+    }
+
+</script>
