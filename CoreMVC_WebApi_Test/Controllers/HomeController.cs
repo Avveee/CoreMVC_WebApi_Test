@@ -9,6 +9,8 @@ namespace CoreMVC_WebApi_Test.Controllers
 {
     public class HomeController : Controller
     {
+        // test
+        int i = 0;
         private readonly ILogger<HomeController> _logger;
         private readonly PubsContext _context;
 
